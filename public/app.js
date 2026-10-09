@@ -1,6 +1,6 @@
-import {esc,toCsv,filterRows} from '/format.js';
+import {esc,toCsv,filterRows,catalogDrift} from '/format.js';
 const $=id=>document.getElementById(id);
-const state={catalog:[],mode:'demo',provider:'',a:{type:'eBOM',release:'',serial:'',id:'ebom-rA'},b:{type:'aBOM',release:'',serial:'SN120',id:'abom-sn120'},report:null,view:'differences',treeSide:'left',assembly:null,expanded:new Set(),history:[],token:'',busy:false,page:0,failure:null};
+const state={catalog:[],mode:'demo',provider:'',a:{type:'eBOM',release:'',serial:'',id:'ebom-rA'},b:{type:'aBOM',release:'',serial:'SN120',id:'abom-sn120'},report:null,view:'differences',treeSide:'left',assembly:null,expanded:new Set(),history:[],token:'',busy:false,page:0,failure:null,catalogReady:false};
 const formatDate=s=>new Date(s).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const tag=s=>`<span class="tag ${['Added','Removed','Replaced','Revision','Quantity','Moved','Unchanged'].includes(s)?s.toLowerCase():''}">${esc(s)}</span>`;
 let toastTimer;
@@ -25,20 +25,20 @@ function renderSide(side){
   <div class="source-fields"><label for="${side}-type">BOM view<select id="${side}-type" data-side="${side}" data-field="type">${options(['eBOM','mBOM','aBOM'].map(t=>[t,t]),pick.type)}</select></label>
   <label for="${side}-release">Release state<select id="${side}-release" data-side="${side}" data-field="release">${options([['','All states'],['Released','Released'],['Unreleased','Unreleased']],pick.release)}</select></label>
   <label for="${side}-serial">Serial number<select id="${side}-serial" data-side="${side}" data-field="serial"${!serials.length?' disabled':''}>${options([['',serials.length?'All serials':'Not serialized'],...serials.map(s=>[s,s])],pick.serial)}</select></label></div>
-  <label class="snapshot-field" for="${side}-id">Assembly / revision / snapshot<select id="${side}-id" data-side="${side}" data-field="id"${!available.length?' disabled':''}>${available.length?options(available.map(s=>[s.id,`${s.partNumber} · ${s.name} · ${s.revision}${s.serialNumber?' / '+s.serialNumber:''}`]),pick.id):'<option>No snapshots match these filters</option>'}</select></label>
+  <label class="snapshot-field" for="${side}-id">Assembly / revision / snapshot<select id="${side}-id" data-side="${side}" data-field="id"${!available.length?' disabled':''}>${available.length?options(available.map(s=>[s.id,`${s.partNumber} · ${s.name} · ${s.revision}${s.serialNumber?' / '+s.serialNumber:''} · ${s.id}`]),pick.id):'<option>No snapshots match these filters</option>'}</select></label>
   <div class="source-meta"><span>${selected?`${esc(selected.nodeCount??'—')} occurrences · captured ${esc(formatDate(selected.capturedAt))}`:'Try another release state or BOM view'}</span><span class="${selected?.releaseStatus==='Released'?'release':'unreleased'}">${esc(selected?.releaseStatus||'')}</span></div>`;
 }
 function selectionsChanged(){
-  $('compare').disabled=state.busy||!state.a.id||!state.b.id;
-  const moved=!!state.report&&(state.report.left.id!==state.a.id||state.report.right.id!==state.b.id);
+  $('compare').disabled=state.busy||!state.catalogReady||!state.a.id||!state.b.id;
+  const moved=!!state.report&&(state.report.left.id!==state.a.id||state.report.right.id!==state.b.id||catalogDrift(state.report,state.catalog).length>0);
   $('stale').hidden=!state.report||(!moved&&!state.failure);
   // A failed run must not leave an older result looking current.
-  $('stale').textContent=state.failure&&state.report?`The latest comparison failed (${state.failure}). Results below are from ${formatDate(state.report.comparedAt)} and may not reflect current sources.`:'Selection changed. Compare BOMs to update the results below.';
+  $('stale').textContent=state.failure&&state.report?`The latest comparison failed (${state.failure}). Results below are from ${formatDate(state.report.comparedAt)} and may not reflect current sources.`:'Selection or source metadata changed. Compare BOMs to update the results below.';
 }
 async function loadCatalog(){
-  error('');
+  state.catalogReady=false;selectionsChanged();error('');
   try {
-    const data=await api('/api/catalog');state.catalog=data.snapshots;state.mode=data.mode;state.provider=data.provider;
+    const data=await api('/api/catalog');state.catalog=data.snapshots;state.mode=data.mode;state.provider=data.provider;state.catalogReady=true;
     renderSide('a');renderSide('b');selectionsChanged();
     const allSynthetic=state.catalog.length>0&&state.catalog.every(s=>s.synthetic);
     $('mode-label').textContent=allSynthetic?'Demo workspace':data.mode==='gateway'?'Gateway connected':'Snapshot directory';
@@ -46,13 +46,15 @@ async function loadCatalog(){
     $('footer-mode').textContent=allSynthetic?'SYNTHETIC DATA · NO LIVE SYSTEM CONNECTION':'Source capture times shown on each snapshot';
     if(!state.catalog.length)error('The catalog is empty. Add authorized snapshots to the configured provider.');
     return true;
-  }catch(e){error(e.message);$('mode-label').textContent='Source unavailable';$('compare').disabled=true;return false;}
+  }catch(e){state.failure=`catalog refresh failed: ${e.message}`;error(e.message);$('mode-label').textContent='Source unavailable';selectionsChanged();return false;}
 }
 async function compare(){
-  if(state.busy)return;if(!state.a.id||!state.b.id){selectionsChanged();return;}state.busy=true;$('compare').disabled=true;$('compare').innerHTML='<span class="loading-spin">◈</span> Comparing…';error('');
+  if(state.busy)return;if(!state.catalogReady||!state.a.id||!state.b.id){selectionsChanged();return;}state.busy=true;$('compare').disabled=true;$('compare').innerHTML='<span class="loading-spin">◈</span> Comparing…';error('');
   const leftId=state.a.id,rightId=state.b.id;
+  const selected=state.catalog.filter(s=>s.id===leftId||s.id===rightId);
   try{
     const report=await api('/api/compare',{method:'POST',body:JSON.stringify({leftId,rightId})});
+    report.warnings.push(...catalogDrift(report,selected));
     state.failure=null;state.history.unshift(report);state.history=state.history.slice(0,8);showReport(report);toast('Comparison ready');
   }catch(e){state.failure=e.message;error(e.message);}finally{state.busy=false;$('compare').innerHTML='<span>◈</span> Compare BOMs <span>→</span>';selectionsChanged();}
 }
@@ -64,9 +66,7 @@ function showReport(report){
   for(const r of report.rows.filter(r=>r.changes.length)){if(r.ancestorsA[1])affected.add('A:'+r.ancestorsA[1]);}
   const metrics=[['Changed occurrences',s.changed,`of ${s.total} aligned or unmatched lines`,'◈',` / ${s.total}`],['Source explained',s.explained,`Every changed field covered by a declared source record${(s.partiallyExplained||0)+(s.linkedUnscoped||0)?` · ${(s.partiallyExplained||0)+(s.linkedUnscoped||0)} more partially or unscoped`:''}`,'↗',` / ${s.changed}`],['Affected A subassemblies',affected.size,'Top-level branches in the baseline','⌘',''],['Reference changes',s.referenceChanges,'Added, removed, reassigned or revised assignments','⌁','']];
   $('metrics').innerHTML=metrics.map(([label,value,note,icon,denom])=>`<div class="metric"><div class="metric-label">${label}</div><span class="metric-icon" aria-hidden="true">${icon}</span><div class="metric-value">${value}<small>${denom}</small></div><div class="metric-note">${note}</div></div>`).join('');
-  // The catalog header the user selected and the snapshot actually compared can differ if a source refreshed in between.
-  const drift=['left','right'].flatMap((side,i)=>{const c=state.catalog.find(x=>x.id===report[side].id);if(!c)return [];const d=[];if(c.capturedAt!==report[side].capturedAt)d.push(`captured ${c.capturedAt} in catalog vs ${report[side].capturedAt} compared`);if(c.nodeCount!=null&&c.nodeCount!==report[side].nodeCount)d.push(`${c.nodeCount} occurrences in catalog vs ${report[side].nodeCount} compared`);return d.length?[`${i?'B':'A'} snapshot ${report[side].id} differs from its catalog entry (${d.join('; ')}). The source may have refreshed; refresh the catalog and compare again.`]:[];});
-  const notes=[...report.warnings,...drift];
+  const notes=report.warnings;
   $('warnings').hidden=!notes.length;$('warnings-summary').textContent=`${notes.length} context notes · review before interpreting differences`;
   $('warning-list').innerHTML=notes.map(w=>`<li>${esc(w)}</li>`).join('');
   $('diff-count').textContent=s.changed;$('ref-count').textContent=s.referenceChanges;
@@ -118,6 +118,7 @@ function explanationLabel(r){
   if(r.explained)return '↗ '+esc(x.records?.[0]||r.evidence.find(e=>e.relationship==='explains')?.id||'');
   if(status==='Partially explained')return `Partially explained${x.unexplained?.length?' · '+esc(x.unexplained.join(', '))+' not covered':''}`;
   if(status==='Linked, scope not declared')return 'Linked · scope not declared';
+  if(status==='Unresolved correspondence')return 'Unresolved match';
   return r.evidence.length?'Related record':r.changes.length?'— Unlinked':'—';
 }
 function evidenceNote(e){

@@ -12,7 +12,7 @@ Configure `BOM_MODE=gateway`, `BOM_GATEWAY_URL=https://internal-gateway/api`, an
 
 | Request | Response |
 | --- | --- |
-| `GET {base}/boms` | JSON array of unique snapshot headers, maximum 5,000; same required header fields as below, optional `nodeCount`; omit `nodes`. |
+| `GET {base}/boms` | JSON array of unique snapshot headers, maximum 5,000; same required header fields as below, including `nodeCount` for live data; omit `nodes`. |
 | `GET {base}/boms/{encoded-id}` | Complete normalized snapshot. Response ID must equal the requested ID. |
 
 IDs should refer to immutable, fully resolved structures. If a source is mutable, issue a new snapshot ID whenever its contents change and publish the exact captured time. Never silently truncate catalog pages or component pages. The gateway must aggregate authorized pages into a complete response within the contract, or explicitly reject the request. No synthetic fallback occurs.
@@ -80,9 +80,10 @@ IDs should refer to immutable, fully resolved structures. If a source is mutable
 - `occurrenceKey` is optional but must be unique inside a snapshot and stable across the compared views. It identifies the same physical/logical usage position, not a PN or an arbitrary row number. A reliable canonical mapping enables move detection.
 - Local `quantity` is finite and nonnegative, and `unit` is explicit. No implicit multiplication by parent quantities, aggregation, unit conversion, or zero-vs-blank coercion occurs.
 - `refDes` and `records` are arrays, even when empty. Each `refDes` entry is one trimmed designator with no spaces or list delimiters (`,` `;` `|`); split lists and normalize upstream. Duplicate reference values on one node are invalid; repeated references across nodes remain visible with a warning.
-- Optional `nodeCount` on a snapshot declares how many occurrences a complete extraction contains. When present it must equal `nodes.length`, otherwise the snapshot is rejected as incomplete. Gateways should always send it, because a structure truncated at subtree boundaries is still a valid tree.
+- Live (`synthetic: false`) headers and snapshots must declare `nodeCount` between 1 and 20,000, equal to the full snapshot node count. Derive it from the complete upstream structure before pagination or row limits. A count recomputed from truncated rows does not establish completeness. Synthetic fixtures may omit it.
 - Record fields `id`, `type`, `status`, `summary`, `source`, `relationship` are required. Optional `url` must be HTTP(S) without embedded credentials. `explains` requires an explicit source association; `related` never counts as explanatory evidence.
-- Optional record scope: `changes` lists the change types the source says the record accounts for (`Added`, `Removed`, `Replaced`, `Revision`, `Quantity`, `Unit`, `Reference`, `Moved`, `Description`); `serialNumber` limits the record to one serialized unit. A changed occurrence counts as explained only when qualifying records declare every one of its change types. An `explains` record with no `changes` is shown as a link with undeclared scope and is not counted. Records present unchanged (same source, id and status) on both snapshots, and records scoped to a serial outside the comparison, are shown but not counted. None of this is an approval.
+- Optional record scope: `changes` lists the change types the source says the record accounts for (`Added`, `Removed`, `Replaced`, `Revision`, `Quantity`, `Unit`, `Reference`, `Moved`, `Description`); `serialNumber` limits the record to one serialized unit. A changed occurrence counts as explained only when qualifying records declare every one of its change types. An `explains` record with no `changes` is shown as a link with undeclared scope and is not counted. Records present unchanged (same source, id and status) on both snapshots, and records whose declared serial does not match the side carrying the record, are shown but not counted. None of this is an approval.
+- Each occurrence must have unique record identities (`source`, `id`); merge duplicate joined records upstream. Unresolved correspondence is never counted as explained.
 - Additional fields are retained. Do not forward sensitive fields the app does not need.
 
 Missing source fields must be resolved or rejected by the gateway. Do not label unknown lifecycle state as Released, missing quantity as 0, or unknown revision as a real revision.
@@ -93,10 +94,10 @@ Missing source fields must be resolved or rejected by the gateway. Do not label 
 | --- | --- |
 | `GET /healthz` | Public process liveness only; does not claim the source is healthy. |
 | `GET /api/catalog` | Retrieves and validates current catalog, returns provider mode and retrieval time. |
-| `POST /api/compare` | JSON `{ "leftId": "...", "rightId": "..." }`; fetches current selected snapshots and returns a complete comparison report. |
+| `POST /api/compare` | JSON `{ "leftId": "...", "rightId": "..." }`; fetches current selected snapshots and returns a complete comparison report; a same-ID comparison reads that source only once. |
 | `POST /api/export` | Same request shape; recomputes from sources and returns CSV. |
 
-The UI exports its **already displayed** report to JSON/CSV without re-querying, so it is reproducible even if sources change afterward. Table filters do not truncate exports. API exports recompute and should be used only when a fresh comparison is intended. JSON is the audit format: CSV does not include every header or hash.
+The UI exports its **already displayed** report to JSON/CSV without re-querying, so it is reproducible even if sources change afterward. Table filters do not truncate exports. API exports recompute and should be used only when a fresh comparison is intended. JSON is the full audit format, including frozen catalog-drift warnings from the UI. CSV includes snapshot hashes and occurrence identities, but omits the complete headers and comparison warnings.
 
 Errors: 400 malformed request or invalid snapshot, 401 missing/invalid application token, 502 gateway transport/contract error, 500 other source failures. Neither catalogs nor results are persisted server-side; session history is browser-tab memory only.
 

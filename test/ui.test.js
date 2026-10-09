@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 import { createProvider } from '../src/providers.js';
 import { compareSnapshots } from '../src/compare.js';
-import { esc,toCsv,filterRows } from '../public/format.js';
+import { esc,toCsv,filterRows,catalogDrift } from '../public/format.js';
 
 const provider=createProvider({BOM_MODE:'demo'});
 const demoApi=async(path,options)=>{
@@ -24,7 +24,7 @@ async function bootUi(api=demoApi){
     setAttribute(){} showModal(){this.open=true;} close(){this.open=false;} scrollIntoView(){} click(){}
   }
   for(const [,id]of html.matchAll(/\bid="([^"]+)"/g))elements.set(id,new Element(id));
-  const context={esc,toCsv,filterRows,console,URL,Blob,matchMedia:()=>({matches:true}),setTimeout:()=>1,clearTimeout(){},
+  const context={esc,toCsv,filterRows,catalogDrift,console,URL,Blob,matchMedia:()=>({matches:true}),setTimeout:()=>1,clearTimeout(){},
     document:{getElementById:id=>{assert.ok(elements.has(id),`Missing element ${id}`);return elements.get(id);},addEventListener:(name,fn)=>listeners.set(name,fn),createElement:()=>new Element('download')},
     fetch:async(path,options)=>{calls.push(path);try{const data=await api(path,options);return {ok:true,status:200,json:async()=>data};}catch(e){return {ok:false,status:502,json:async()=>({error:e.message})};}},
   };
@@ -75,4 +75,21 @@ test('F12 explanation labels distinguish explained, partial, unscoped and relate
 test('a compared snapshot that differs from its selected catalog entry is called out',async()=>{
   const {e}=await bootUi(async(path,options)=>{const data=await demoApi(path,options);if(path==='/api/compare')data.right={...data.right,capturedAt:'2026-10-10T08:00:00Z',nodeCount:17};return data;});
   assert.match(e('warning-list').innerHTML,/abom-sn120 differs from its catalog entry/);assert.match(e('warning-list').innerHTML,/18 occurrences in catalog vs 17 compared/);
+});
+
+test('T8 a failed catalog refresh keeps comparison disabled after selection changes',async()=>{
+  let fail=false;const {e,listeners}=await bootUi(async(path,options)=>{if(fail&&path==='/api/catalog')throw new Error('Source down');return demoApi(path,options);});
+  fail=true;e('nav-sources').onclick();await e('refresh-sources').onclick();
+  listeners.get('change')({target:{dataset:{side:'a',field:'id'},value:'ebom-rA'}});
+  assert.equal(e('compare').disabled,true);assert.equal(e('stale').hidden,false);
+});
+
+test('T9 catalog drift covers serial/configuration changes and survives into the captured report',async()=>{
+  let captured;const {e}=await bootUi(async(path,options)=>{const data=await demoApi(path,options);if(path==='/api/compare'){data.right={...data.right,serialNumber:'SN999',configuration:'Different configuration'};captured=data;}return data;});
+  assert.match(e('warning-list').innerHTML,/SN999/);assert.match(e('warning-list').innerHTML,/Different configuration/);assert.ok(captured.warnings.some(w=>w.includes('SN999')),'captured JSON report retains the drift warning');
+});
+
+test('T10 snapshot option labels distinguish otherwise identical catalog entries',async()=>{
+  const {e}=await bootUi(async(path,options)=>{const data=await demoApi(path,options);if(path==='/api/catalog')data.snapshots.push({...data.snapshots.find(s=>s.id==='ebom-rA'),id:'ebom-rA-history'});return data;});
+  assert.match(e('side-a').innerHTML,/>[^<]*ebom-rA-history[^<]*<\/option>/);
 });

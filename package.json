@@ -1,6 +1,6 @@
 {
   "name": "dreamcatcher-bom-compare",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "Occurrence-aware eBOM, mBOM and aBOM comparison workspace",

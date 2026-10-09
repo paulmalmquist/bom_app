@@ -60,7 +60,7 @@ try {
     await page.close();close();
   }
   { // Hostile source text and gateway-controlled catalog fields.
-    const a=structuredClone(await demo.get('ebom-rA'));a.synthetic=false;a.name='<img src=x onerror="window.__pwned=1">Engine';a.nodes[2].name='<script>window.__pwned=2</script>';
+    const a=structuredClone(await demo.get('ebom-rA'));a.synthetic=false;a.nodeCount=a.nodes.length;a.name='<img src=x onerror="window.__pwned=1">Engine';a.nodes[2].name='<script>window.__pwned=2</script>';
     a.nodes[2].records=[{id:'NC-<b>1</b>',type:'NC',status:'Open',summary:'<a href="https://evil.example">click</a>',source:'QMS',relationship:'explains',url:'https://evil.example/x?"onmouseover="alert(1)'}];
     const b=structuredClone(a);b.id='other';b.nodes[2].revision='Z';
     const headers=[a,b].map(x=>{const {nodes,...h}=x;return {...h,nodeCount:'<a id="injected" href="https://evil.example">Re-enter your token</a>'};});

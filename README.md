@@ -68,9 +68,11 @@ For Dreamcatcher, put the service behind the existing authenticated HTTPS ingres
 
 ## Verification
 
-All 38 tests pass on Node 24. A red-team review ([RED_TEAM_REPORT.md](RED_TEAM_REPORT.md)) added 14 regression tests for defects that produced convincing but incorrect results; each failed before its fix. `npm test` covers all 36 demo pairing directions; input-order invariance; repeated/ambiguous parts; moves, substitutions, quantities and references; malformed/cyclic structures; provenance and CSV safety; source errors, authentication and the HTTP catalog/compare/export path. A script-level UI smoke test checks initialization, filters, view changes, swapping, evidence dialogs and history restoration against a lightweight DOM harness. `npm run check` checks all JavaScript syntax.
+All 49 tests pass on Node 24. See the [first red-team review](RED_TEAM_REPORT.md) and [second correctness/simplification pass](docs/SECOND_PASS_REVIEW.md). Tests cover all 36 demo pairings, 150 seeded structural cases, occurrence/evidence edge cases, HTTP/auth/export behavior, and UI state transitions. Run `npm test` and `npm run check` (includes `.js` and `.mjs`).
 
-`node scripts/browser-smoke.mjs` runs 14 checks in headless Chromium when Playwright is installed separately (not a runtime dependency). Perform the human browser steps in [ACCEPTANCE.md](docs/ACCEPTANCE.md) on the target browsers before rollout. Source connectivity, Excel reconciliation, enterprise SSO and production-scale warehouse latency remain work-environment validation items.
+The second pass reduces the comparison engine's source size by about 6% and replaces whole-tree rescans with a parent queue. An 8,001-occurrence synthetic benchmark decreased from 512 ms to 321 ms median; this is not a live-source or concurrency benchmark. Live source headers now require an upstream `nodeCount`; serial-scoped evidence must match its own snapshot side.
+
+`node scripts/browser-smoke.mjs` runs 14 checks in headless Chromium when Playwright is installed separately (not a runtime dependency). The second-pass environment lacked the Chromium executable, so browser checks could not be rerun here. Perform the human browser steps in [ACCEPTANCE.md](docs/ACCEPTANCE.md) on the target browsers before rollout. Source connectivity, Excel reconciliation, enterprise SSO and production-scale warehouse latency remain work-environment validation items.
 
 ## Repository layout
 

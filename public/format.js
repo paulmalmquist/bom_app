@@ -1,4 +1,14 @@
 export const esc = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function catalogDrift(report,catalog) {
+  const fields=['partNumber','revision','type','source','releaseStatus','serialNumber','configuration','capturedAt','nodeCount','synthetic'];
+  return ['left','right'].flatMap((side,i)=>{
+    const actual=report[side], selected=catalog.find(s=>s.id===actual.id);
+    if(!selected)return [];
+    const differences=fields.filter(k=>selected[k]!=null&&selected[k]!==actual[k] || k==='serialNumber'&&(selected[k]??null)!==(actual[k]??null))
+      .map(k=>k==='nodeCount'?`${selected[k]} occurrences in catalog vs ${actual[k]} compared`:`${k}: ${selected[k]??'none'} in catalog vs ${actual[k]??'none'} compared`);
+    return differences.length?[`${i?'B':'A'} snapshot ${actual.id} differs from its catalog entry (${differences.join('; ')}). Refresh the catalog and compare again.`]:[];
+  });
+}
 export function toCsv(report) {
   const cell=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return `"${s.replaceAll('"','""')}"`;};
   // Paths alone do not identify repeated occurrences, so each row also carries occurrence ids, keys and the
@@ -10,5 +20,5 @@ export function toCsv(report) {
 }
 export function filterRows(report,{search='',change='',changesOnly=true,needsReview=false,assembly=null,treeSide='left'}={}){
   const q=search.trim().toLowerCase();
-  return report.rows.filter(r=>(!changesOnly||r.changes.length)&&(!change||r.changes.includes(change))&&(!needsReview||(r.changes.length&&!r.explained))&&(!assembly||(treeSide==='left'?r.ancestorsA:r.ancestorsB).includes(assembly))&&(!q||[r.pathA,r.pathB,r.left?.partNumber,r.right?.partNumber,...r.left?.refDes||[],...r.right?.refDes||[],...r.evidence.map(e=>e.id)].join(' ').toLowerCase().includes(q)));
+  return report.rows.filter(r=>(!changesOnly||r.changes.length||r.uncertain)&&(!change||r.changes.includes(change))&&(!needsReview||r.uncertain||(r.changes.length&&!r.explained))&&(!assembly||(treeSide==='left'?r.ancestorsA:r.ancestorsB).includes(assembly))&&(!q||[r.pathA,r.pathB,r.left?.partNumber,r.right?.partNumber,...r.left?.refDes||[],...r.right?.refDes||[],...r.evidence.map(e=>e.id)].join(' ').toLowerCase().includes(q)));
 }

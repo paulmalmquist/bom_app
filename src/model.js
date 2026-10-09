@@ -22,12 +22,13 @@ export function validateHeader(s) {
   date(s.capturedAt, 'capturedAt');
   if (typeof s.synthetic !== 'boolean') fail('synthetic must explicitly be true or false');
   if (s.nodeCount != null && (!Number.isInteger(s.nodeCount) || s.nodeCount < 0)) fail('nodeCount must be a nonnegative integer');
+  if (!s.synthetic && (!Number.isInteger(s.nodeCount) || s.nodeCount < 1 || s.nodeCount > 20000)) fail('Live snapshots must declare source nodeCount (1–20,000)');
   return s;
 }
 export function validateSnapshot(input) {
   const s = validateHeader(structuredClone(input));
   if (!Array.isArray(s.nodes) || !s.nodes.length || s.nodes.length > 20000) fail('nodes must contain 1–20,000 occurrences');
-  // A declared count lets the source prove the extraction is complete; a truncated subtree is otherwise a valid tree.
+  // Detect disagreement with the upstream count. A count recomputed from truncated rows cannot prove completeness.
   if (s.nodeCount != null && s.nodeCount !== s.nodes.length) fail(`Snapshot declares nodeCount ${s.nodeCount} but contains ${s.nodes.length} occurrences: incomplete or truncated extraction`);
   const ids = new Map(), keys = new Set();
   for (const n of s.nodes) {
@@ -46,9 +47,13 @@ export function validateSnapshot(input) {
     if (n.refDes.some(r => r !== r.trim() || /[,;|\s]/.test(r))) fail(`refDes on ${n.id} must contain one trimmed designator per entry (no spaces or list delimiters)`);
     if (new Set(n.refDes).size !== n.refDes.length) fail(`Duplicate refDes on ${n.id}`);
     if (!Array.isArray(n.records)) fail(`records must be an array on ${n.id}`);
+    const recordIds = new Set();
     for (const r of n.records) {
       if (!r || typeof r !== 'object' || Array.isArray(r)) fail(`Each record must be an object on ${n.id}`);
       for (const key of ['id', 'type', 'status', 'summary', 'source']) text(r[key], `record.${key}`, 3000);
+      const key = JSON.stringify([r.source,r.id]);
+      if (recordIds.has(key)) fail(`Duplicate source record ${r.id} on ${n.id}`);
+      recordIds.add(key);
       if (!['explains', 'related'].includes(r.relationship)) fail('record.relationship must be explains or related');
       // Optional explicit scope: which change types the source says this record accounts for, and which serial it applies to.
       if (r.changes != null && (!Array.isArray(r.changes) || !r.changes.length || r.changes.some(c => !CHANGE_TYPES.includes(c)) || new Set(r.changes).size !== r.changes.length)) fail(`record.changes on ${n.id} must list distinct change types: ${CHANGE_TYPES.join(', ')}`);

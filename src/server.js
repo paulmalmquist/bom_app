@@ -57,7 +57,9 @@ export function createServer({provider=createProvider(),token=process.env.BOM_AP
         const data=await body(req);
         if(!data||typeof data!=='object'||Array.isArray(data))throw new ValidationError('Request must be an object');
         for(const key of ['leftId','rightId'])if(typeof data[key]!=='string'||!/^[a-zA-Z0-9_.:-]{1,500}$/.test(data[key]))throw new ValidationError(`${key} must identify a catalog snapshot`);
-        const [a,b]=await Promise.all([provider.get(data.leftId),provider.get(data.rightId)]);
+        // A same-id comparison must use one captured version even if the source behind that id is mutable.
+        const first=provider.get(data.leftId);
+        const [a,b]=await Promise.all([first,data.leftId===data.rightId?first:provider.get(data.rightId)]);
         const report=compareSnapshots(a,b);
         if(url.pathname==='/api/export') {
           // Exporting via this endpoint recomputes from sources. UI exports its exact displayed report.
