@@ -1,0 +1,290 @@
+{
+  "id": "abom-sn120",
+  "name": "Demonstrator engine",
+  "partNumber": "DEMO-1000",
+  "revision": "As built",
+  "source": "Manufacturo",
+  "type": "aBOM",
+  "releaseStatus": "Released",
+  "serialNumber": "SN120",
+  "configuration": "Demo baseline · all units",
+  "capturedAt": "2026-10-09T14:00:00Z",
+  "synthetic": true,
+  "nodes": [
+    {
+      "id": "engine",
+      "parentId": null,
+      "occurrenceKey": "demo:engine",
+      "name": "Demonstrator engine",
+      "partNumber": "DEMO-1000",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "feed",
+      "parentId": "engine",
+      "occurrenceKey": "demo:feed",
+      "name": "Propellant feed",
+      "partNumber": "DEMO-2000",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "valve-ox",
+      "parentId": "feed",
+      "occurrenceKey": "demo:valve-ox",
+      "name": "Isolation valve · alternate",
+      "partNumber": "DEMO-2110",
+      "revision": "C",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [
+        "V-OX-01"
+      ],
+      "records": [
+        {
+          "id": "DEMO-NC-1042",
+          "type": "NC",
+          "summary": "Explicit synthetic disposition authorizes alternate valve DEMO-2110 at V-OX-01 for SN120.",
+          "relationship": "explains",
+          "status": "Closed",
+          "source": "Synthetic quality system"
+        }
+      ]
+    },
+    {
+      "id": "valve-fuel",
+      "parentId": "feed",
+      "occurrenceKey": "demo:valve-fuel",
+      "name": "Isolation valve · fuel",
+      "partNumber": "DEMO-2100",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [
+        "V-FU-01"
+      ],
+      "records": []
+    },
+    {
+      "id": "sensor-feed",
+      "parentId": "feed",
+      "occurrenceKey": "demo:sensor-feed",
+      "name": "Feed pressure transducer",
+      "partNumber": "DEMO-2200",
+      "revision": "B",
+      "quantity": 2,
+      "unit": "EA",
+      "refDes": [
+        "PT-101",
+        "PT-102"
+      ],
+      "records": [
+        {
+          "id": "DEMO-ECO-028",
+          "type": "ECO",
+          "summary": "Synthetic engineering change updates feed transducers to revision B.",
+          "relationship": "explains",
+          "status": "Closed",
+          "source": "Synthetic quality system"
+        }
+      ]
+    },
+    {
+      "id": "line",
+      "parentId": "feed",
+      "occurrenceKey": "demo:line",
+      "name": "Feed line",
+      "partNumber": "DEMO-2400",
+      "revision": "A",
+      "quantity": 1.25,
+      "unit": "M",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "power",
+      "parentId": "engine",
+      "occurrenceKey": "demo:power",
+      "name": "Power & controls",
+      "partNumber": "DEMO-3000",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "controller",
+      "parentId": "power",
+      "occurrenceKey": "demo:controller",
+      "name": "Controller module",
+      "partNumber": "DEMO-3100",
+      "revision": "B",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [
+        "ECU-01"
+      ],
+      "records": []
+    },
+    {
+      "id": "harness",
+      "parentId": "structure",
+      "occurrenceKey": "demo:harness",
+      "name": "Primary harness",
+      "partNumber": "DEMO-3200",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [
+        "WH-01"
+      ],
+      "records": [
+        {
+          "id": "DEMO-WO-120",
+          "type": "Work order",
+          "summary": "Harness installed in the structure work package.",
+          "relationship": "related",
+          "status": "Closed",
+          "source": "Synthetic quality system"
+        }
+      ]
+    },
+    {
+      "id": "bracket-p",
+      "parentId": "power",
+      "occurrenceKey": "demo:bracket-p",
+      "name": "Mounting bracket",
+      "partNumber": "DEMO-3300",
+      "revision": "A",
+      "quantity": 4,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "thermal",
+      "parentId": "engine",
+      "occurrenceKey": "demo:thermal",
+      "name": "Thermal management",
+      "partNumber": "DEMO-4000",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "shield",
+      "parentId": "thermal",
+      "occurrenceKey": "demo:shield",
+      "name": "Thermal shield",
+      "partNumber": "DEMO-4100",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "sensor-temp",
+      "parentId": "thermal",
+      "occurrenceKey": "demo:sensor-temp",
+      "name": "Temperature probe",
+      "partNumber": "DEMO-4200",
+      "revision": "A",
+      "quantity": 2,
+      "unit": "EA",
+      "refDes": [
+        "TT-201",
+        "TT-203"
+      ],
+      "records": []
+    },
+    {
+      "id": "bracket-t",
+      "parentId": "thermal",
+      "occurrenceKey": "demo:bracket-t",
+      "name": "Mounting bracket",
+      "partNumber": "DEMO-3300",
+      "revision": "A",
+      "quantity": 2,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "structure",
+      "parentId": "engine",
+      "occurrenceKey": "demo:structure",
+      "name": "Primary structure",
+      "partNumber": "DEMO-5000",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "frame",
+      "parentId": "structure",
+      "occurrenceKey": "demo:frame",
+      "name": "Support frame",
+      "partNumber": "DEMO-5100",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": []
+    },
+    {
+      "id": "fastener",
+      "parentId": "structure",
+      "occurrenceKey": "demo:fastener",
+      "name": "Mounting bolt",
+      "partNumber": "DEMO-5200",
+      "revision": "A",
+      "quantity": 14,
+      "unit": "EA",
+      "refDes": [],
+      "records": [
+        {
+          "id": "DEMO-NC-1061",
+          "type": "NC",
+          "summary": "Synthetic disposition adds two mounting bolts for this unit.",
+          "relationship": "explains",
+          "status": "Closed",
+          "source": "Synthetic quality system"
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "parentId": "feed",
+      "occurrenceKey": "demo:support",
+      "name": "Feed line support",
+      "partNumber": "DEMO-2500",
+      "revision": "A",
+      "quantity": 1,
+      "unit": "EA",
+      "refDes": [],
+      "records": [
+        {
+          "id": "DEMO-NC-1054",
+          "type": "NC",
+          "summary": "Synthetic disposition adds feed line support to this serialized unit.",
+          "relationship": "explains",
+          "status": "Closed",
+          "source": "Synthetic quality system"
+        }
+      ]
+    }
+  ]
+}

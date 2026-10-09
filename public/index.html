@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BOM Compare · Dreamcatcher</title>
+  <meta name="description" content="Compare engineering, manufacturing, and as-built bills of materials with assembly-level traceability.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <aside class="rail" aria-label="Application navigation">
+    <a class="brand" href="/" aria-label="Dreamcatcher home"><span class="brand-orbit">✦</span><span>DREAMCATCHER<small>ENGINEERING WORKSPACE</small></span></a>
+    <div class="rail-caption">WORKSPACE</div>
+    <button class="nav active" id="nav-compare"><span>◈</span>BOM Compare<span class="nav-dot"></span></button>
+    <button class="nav" id="nav-references"><span>⌘</span>Reference map</button>
+    <button class="nav" id="nav-history"><span>◷</span>Session history</button>
+    <div class="rail-caption second">CONNECTIONS</div>
+    <button class="nav" id="nav-sources"><span>▱</span>Data sources</button>
+    <button class="nav" id="nav-guide"><span>ⓘ</span>Comparison guide</button>
+    <div class="rail-bottom"><div class="constellation" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p>Every difference.<br><strong>In context.</strong></p><div class="version">BOM COMPARE <span>V1.0</span></div></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar"><div><span class="mobile-brand">✦ </span>Engineering tools <span class="slash">/</span> <strong>BOM Compare</strong></div><button id="mode-button" class="mode-pill"><span class="status-dot"></span><span id="mode-label">Loading catalog</span></button></header>
+    <main>
+      <div class="page-heading"><div><div class="eyebrow">CONFIGURATION INTELLIGENCE</div><h1>BOM Compare<span class="heading-dot">.</span></h1><p>From a changed part to the assembly it belongs to.</p></div><button id="guide-button" class="button secondary">How comparison works <span>↗</span></button></div>
+      <div id="alert" class="alert" role="alert" hidden></div>
+      <section class="comparison-setup" aria-label="Choose bills of materials">
+        <div id="side-a" class="source-card"></div>
+        <button id="swap" class="swap" aria-label="Swap baseline and comparison" title="Swap baseline and comparison">⇄</button>
+        <div id="side-b" class="source-card"></div>
+      </section>
+      <div class="compare-actions"><div id="catalog-note" class="muted">Retrieving available snapshots…</div><button class="button primary" id="compare" disabled><span>◈</span> Compare BOMs <span>→</span></button></div>
+      <div id="stale" class="stale" hidden>Selection changed. Compare BOMs to update the results below.</div>
+      <section id="results" hidden aria-label="Comparison results">
+        <div class="result-heading"><div><h2>Comparison overview</h2><div id="run-context" class="muted"></div></div><div class="export-actions"><button class="button secondary small" id="export-json">↓ JSON</button><button class="button secondary small" id="export-csv">↓ Export CSV</button></div></div>
+        <div class="metrics" id="metrics"></div>
+        <details class="warnings" id="warnings"><summary id="warnings-summary"></summary><ul id="warning-list"></ul></details>
+        <div class="workspace">
+          <aside class="assembly-panel"><div class="panel-heading"><h3>Assembly explorer</h3><span id="assembly-count" class="mini-count"></span></div><div class="segmented" aria-label="Assembly tree side"><button id="tree-a" class="active">Baseline A</button><button id="tree-b">Compare B</button></div><button class="all-assemblies active" id="all-assemblies"><span>◈</span> All assemblies <span id="all-count"></span></button><div id="tree" class="tree"></div><div class="tree-legend"><span class="purple-dot"></span> Changed occurrences in branch</div></aside>
+          <section class="diff-panel"><div class="view-tabs" role="tablist" aria-label="Comparison view"><button id="tab-differences" class="active" role="tab" aria-selected="true">Occurrence differences <span id="diff-count"></span></button><button id="tab-references" role="tab" aria-selected="false">Reference designators <span id="ref-count"></span></button></div>
+            <div class="filters"><label class="search"><span aria-hidden="true">⌕</span><input id="search" placeholder="Search part, reference or assembly…" aria-label="Search comparison results"></label><select id="change-filter" aria-label="Filter by change type"><option value="">All change types</option><option>Added</option><option>Removed</option><option>Replaced</option><option>Revision</option><option>Quantity</option><option>Moved</option><option>Reference</option><option>Unit</option><option>Description</option></select><label class="toggle-label"><input type="checkbox" id="changes-only" checked>Changes only</label></div>
+            <div class="filter-subrow"><span id="row-count"></span><label><input type="checkbox" id="needs-review"> Needs source explanation</label><button class="text-button" id="clear-filters">Reset filters</button></div>
+            <div class="table-scroll" id="table-container"></div><div class="table-footer"><span id="footer-note">Select an occurrence to inspect both paths and supporting records.</span><span>LOCAL QUANTITIES · A → B</span></div>
+          </section>
+        </div>
+      </section>
+      <section id="empty-state" class="empty-state"><div class="empty-icon">◈</div><h2>Two structures. One clear view.</h2><p>Choose your snapshots and compare to trace changes through each assembly.</p></section>
+      <footer class="page-footer"><span>Dreamcatcher / BOM Compare</span><span id="footer-mode">Source-aware comparison workspace</span></footer>
+    </main>
+  </div>
+  <dialog id="detail-dialog" class="detail-dialog"><div id="detail-content"></div></dialog>
+  <dialog id="info-dialog" class="info-dialog"><div class="dialog-title"><h2 id="info-title"></h2><button class="icon-button" id="close-info" aria-label="Close dialog">×</button></div><div id="info-content"></div></dialog>
+  <dialog id="login-dialog" class="info-dialog"><div class="eyebrow">WORKSPACE ACCESS</div><h2>Connect to BOM Compare</h2><p>This deployment requires an application access token.</p><form id="login-form"><label>Access token<input id="access-token" type="password" required autocomplete="off"></label><p class="muted">Kept in memory for this tab only.</p><button class="button primary" type="submit">Connect →</button></form></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
