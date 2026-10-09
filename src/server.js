@@ -25,7 +25,15 @@ async function body(req){
   for await(const chunk of req){size+=chunk.length;if(size>10000)throw new ValidationError('Request exceeds 10 KB');chunks.push(chunk);}
   try{return JSON.parse(Buffer.concat(chunks).toString());}catch{throw new ValidationError('Invalid JSON body');}
 }
-export function createServer({provider=createProvider(),token=process.env.BOM_APP_TOKEN||''}={}) {
+const loopbackHosts=new Set(['127.0.0.1','localhost','[::1]']);
+const envHosts=()=>(process.env.BOM_ALLOWED_HOSTS||'').split(',').map(h=>h.trim().toLowerCase()).filter(Boolean);
+// Without an app token the service relies on loopback binding. A browser on this machine can still be pointed at it
+// through DNS rebinding, so the Host header must name loopback or an explicitly allowed internal hostname.
+function hostAllowed(req,allowedHosts){
+  let host;try{host=new URL(`http://${req.headers.host||''}`).hostname.toLowerCase();}catch{return false;}
+  return loopbackHosts.has(host)||allowedHosts.includes(host);
+}
+export function createServer({provider=createProvider(),token=process.env.BOM_APP_TOKEN||'',allowedHosts=envHosts()}={}) {
   return http.createServer(async(req,res)=>{
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Referrer-Policy','no-referrer');
@@ -39,6 +47,7 @@ export function createServer({provider=createProvider(),token=process.env.BOM_AP
         const[file,type]=staticFiles.get(url.pathname);return send(200,await readFile(new URL(`../public/${file}`,import.meta.url)),type);
       }
       if(!url.pathname.startsWith('/api/'))return send(404,{error:'Not found'});
+      if(!token&&!hostAllowed(req,allowedHosts))return send(403,{error:'Host not allowed. Use a loopback address, set BOM_ALLOWED_HOSTS, or configure BOM_APP_TOKEN.'});
       if(!authorized(req,token))return send(401,{error:'Enter the application access token to continue'});
       if(req.method==='GET'&&url.pathname==='/api/catalog'){
         const snapshots=await provider.list();

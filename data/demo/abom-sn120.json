@@ -54,7 +54,13 @@
           "summary": "Explicit synthetic disposition authorizes alternate valve DEMO-2110 at V-OX-01 for SN120.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Replaced",
+            "Revision",
+            "Description"
+          ],
+          "serialNumber": "SN120"
         }
       ]
     },
@@ -92,7 +98,10 @@
           "summary": "Synthetic engineering change updates feed transducers to revision B.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Revision"
+          ]
         }
       ]
     },
@@ -261,7 +270,11 @@
           "summary": "Synthetic disposition adds two mounting bolts for this unit.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Quantity"
+          ],
+          "serialNumber": "SN120"
         }
       ]
     },
@@ -282,7 +295,11 @@
           "summary": "Synthetic disposition adds feed line support to this serialized unit.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Added"
+          ],
+          "serialNumber": "SN120"
         }
       ]
     }

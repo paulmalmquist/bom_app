@@ -16,11 +16,13 @@ The live upstream paths are integration contracts awaiting work-environment impl
 
 ## Matching order
 
-1. Align each snapshot's single root as the comparison anchor. Different root PNs remain an explicit difference and warning.
-2. Match equal canonical occurrence keys across snapshots. This can locate an occurrence moved to another parent.
+1. Match equal canonical occurrence keys across snapshots. This can locate an occurrence moved to another parent, and it takes precedence over root alignment: if A's root is a keyed subassembly inside B, it maps to that subassembly and a scope warning is shown.
+2. If both roots are still unmatched, align them as the comparison anchor. Different root PNs remain an explicit difference and warning.
 3. Within aligned parents only, match a unique exact reference-designator set.
-4. Within aligned parents only, match a unique exact part number. Repeat as new parent pairs become available.
-5. Keep all unmatched occurrences visible. Possible correspondence based on an unmatched PN/reference marks them unresolved. Conflicting authoritative keys are never overridden by heuristic matches.
+4. Within aligned parents only, match a unique exact part number.
+5. Within aligned parents only, pair a repeated same-PN group when the whole group is the same multiset of content (attributes, records and entire subtree, excluding snapshot-local ids) on both sides. Any pairing among interchangeable occurrences yields identical rows, so a snapshot compared with itself reports no changes. Partial overlaps stay unresolved; this step never makes a leftover occurrence "unique". Repeat steps 3–5 as new parent pairs become available.
+6. Keep all unmatched occurrences visible. Possible correspondence based on an unmatched PN/reference marks them unresolved. Conflicting authoritative keys are never overridden by heuristic matches.
+7. Flag, without re-pairing, two kinds of matched correspondence as unresolved: a designator match that changes PN while a same-PN candidate under the same parent is not matched to its own PN (for example two parts that swapped designators), and a canonical key that now names a different part while an unmatched occurrence of the original part remains in the original location (a likely reused key).
 
 There is no global part-number join, fuzzy name matching or silently selected first duplicate. Without canonical mappings, a part whose parent and PN both change may remain added/removed or unresolved. That is deliberate: the inputs do not establish a defensible correspondence.
 
@@ -30,9 +32,9 @@ Matched occurrences compare PN, revision, local quantity (absolute tolerance `1e
 
 The main changed count is the number of distinct changed occurrences, not the number of flags. Root changes count. Ancestor totals count changed descendants without inventing a change to the parent itself. “Affected A subassemblies” counts top-level baseline branches containing changes; new B-only branches are available in the B explorer but do not inflate this A-only metric.
 
-Reference designators are compared as full assignment sets. Changed PN/revision sets are Reassigned; unmatched occurrence correspondence is Relocated; one-sided sets are Added/Removed. A reference still assigned to the same mapped occurrence is unchanged even if that occurrence moves; the occurrence view records its move. Duplicate references remain visible and may require a source-specific scope extension.
+Reference designators are compared as full assignment sets. Changed PN sets are Reassigned; a revision-only change on the same mapped occurrences is Revised; unmatched occurrence correspondence is Relocated; one-sided sets are Added/Removed. A reference still assigned to the same mapped occurrence is unchanged even if that occurrence moves; the occurrence view records its move. Duplicate references remain visible and may require a source-specific scope extension.
 
-“Source explained” counts changed occurrences with at least one explicit `explains` record on either side. It does **not** mean every field difference is explained, the change is approved, or an NC's existence proves causality. Inspect the actual record and disposition.
+“Source explained” counts changed occurrences whose **every** change type is declared by a qualifying `explains` record (`record.changes`). A record does not qualify when it appears with the same source, id and status on both snapshots (pre-existing context), or when its `serialNumber` is outside the comparison. Rows are labelled Explained, Partially explained (uncovered changes listed), Linked with no declared scope, Related records only, or No linked record; only Explained rows leave the “Needs source explanation” queue. Explained never means approved, and an NC's existence never proves causality. Inspect the actual record and disposition.
 
 ## Limits that must stay visible
 

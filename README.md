@@ -38,7 +38,7 @@ Further references:
 - Added, removed, replaced, revised, quantity, unit, reference, description and moved occurrence detection.
 - Distinct repeated occurrences, full A/B paths and selectable assembly branches.
 - A separate reference-designator assignment view, preserving all repeated uses.
-- Explicit explanatory records versus related records, with per-side source provenance.
+- Explanations counted only when source records declare every changed field; partial, unscoped, stale and wrong-serial links stay in the review queue.
 - Search, change filters, unexplained differences, full JSON/CSV exports and the last eight comparisons in tab memory.
 - Deterministic SHA-256 snapshot fingerprints and source capture timestamps in exported reports.
 - Server-only credentials, API token protection, validated inputs, bounded gateway responses and explicit source errors.
@@ -68,9 +68,9 @@ For Dreamcatcher, put the service behind the existing authenticated HTTPS ingres
 
 ## Verification
 
-All 22 tests pass. `npm test` covers all 36 demo pairing directions; repeated/ambiguous parts; moves, substitutions, quantities and references; malformed/cyclic structures; provenance and CSV safety; source errors, authentication and the HTTP catalog/compare/export path. A script-level UI smoke test checks initialization, filters, view changes, swapping, evidence dialogs and history restoration against a lightweight DOM harness. `npm run check` checks all JavaScript syntax.
+All 38 tests pass on Node 24. A red-team review ([RED_TEAM_REPORT.md](RED_TEAM_REPORT.md)) added 14 regression tests for defects that produced convincing but incorrect results; each failed before its fix. `npm test` covers all 36 demo pairing directions; input-order invariance; repeated/ambiguous parts; moves, substitutions, quantities and references; malformed/cyclic structures; provenance and CSV safety; source errors, authentication and the HTTP catalog/compare/export path. A script-level UI smoke test checks initialization, filters, view changes, swapping, evidence dialogs and history restoration against a lightweight DOM harness. `npm run check` checks all JavaScript syntax.
 
-Browser layout and end-user interaction QA could not be run in the build environment. Perform the documented browser smoke steps in [ACCEPTANCE.md](docs/ACCEPTANCE.md) before rollout. Source connectivity, Excel reconciliation, enterprise SSO and production-scale warehouse latency remain work-environment validation items.
+`node scripts/browser-smoke.mjs` runs 14 checks in headless Chromium when Playwright is installed separately (not a runtime dependency). Perform the human browser steps in [ACCEPTANCE.md](docs/ACCEPTANCE.md) on the target browsers before rollout. Source connectivity, Excel reconciliation, enterprise SSO and production-scale warehouse latency remain work-environment validation items.
 
 ## Repository layout
 

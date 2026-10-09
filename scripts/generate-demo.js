@@ -21,13 +21,14 @@ const nodes=[
   node('frame','structure','Support frame','DEMO-5100'),
   node('fastener','structure','Mounting bolt','DEMO-5200',12),
 ];
-const record=(id,type,summary,relationship='explains')=>({id,type,summary,relationship,status:'Closed',source:'Synthetic quality system'});
+// Explanatory records declare which change types they account for and, when serial-specific, the serial they apply to.
+const record=(id,type,summary,relationship='explains',scope={})=>({id,type,summary,relationship,status:'Closed',source:'Synthetic quality system',...scope});
 const base={id:'ebom-rA',name:'Demonstrator engine',partNumber:'DEMO-1000',revision:'A',source:'Teamcenter',type:'eBOM',releaseStatus:'Released',serialNumber:null,configuration:'Demo baseline · all units',capturedAt:'2026-10-09T13:00:00Z',synthetic:true,nodes};
 const snapshots=[base];
 function copy(id,type,rev,status,serial,source){return {...structuredClone(base),id,type,revision:rev,releaseStatus:status,serialNumber:serial,source,capturedAt:'2026-10-09T14:00:00Z'};}
 function update(s,id,patch){Object.assign(s.nodes.find(n=>n.id===id),patch);}
 const eb=copy('ebom-rB','eBOM','B','Unreleased',null,'Teamcenter');
-update(eb,'valve-ox',{revision:'B',records:[record('DEMO-ECO-014','ECO','Valve revision update in the proposed engineering baseline.')]});
+update(eb,'valve-ox',{revision:'B',records:[record('DEMO-ECO-014','ECO','Valve revision update in the proposed engineering baseline.','explains',{changes:['Revision']})]});
 update(eb,'controller',{revision:'B'});update(eb,'fastener',{quantity:16});
 snapshots.push(eb);
 const mb=copy('mbom-rA','mBOM','A','Released',null,'Teamcenter');
@@ -35,13 +36,13 @@ update(mb,'harness',{parentId:'structure'});update(mb,'fastener',{quantity:14});
 mb.nodes.push(node('kit','structure','Installation kit','DEMO-5300'));
 snapshots.push(mb);
 const ab=copy('abom-sn120','aBOM','As built','Released','SN120','Manufacturo');
-update(ab,'valve-ox',{partNumber:'DEMO-2110',revision:'C',name:'Isolation valve · alternate',records:[record('DEMO-NC-1042','NC','Explicit synthetic disposition authorizes alternate valve DEMO-2110 at V-OX-01 for SN120.')]});
-update(ab,'sensor-feed',{revision:'B',records:[record('DEMO-ECO-028','ECO','Synthetic engineering change updates feed transducers to revision B.')]});
-update(ab,'controller',{revision:'B'});update(ab,'fastener',{quantity:14,records:[record('DEMO-NC-1061','NC','Synthetic disposition adds two mounting bolts for this unit.')]});
+update(ab,'valve-ox',{partNumber:'DEMO-2110',revision:'C',name:'Isolation valve · alternate',records:[record('DEMO-NC-1042','NC','Explicit synthetic disposition authorizes alternate valve DEMO-2110 at V-OX-01 for SN120.','explains',{changes:['Replaced','Revision','Description'],serialNumber:'SN120'})]});
+update(ab,'sensor-feed',{revision:'B',records:[record('DEMO-ECO-028','ECO','Synthetic engineering change updates feed transducers to revision B.','explains',{changes:['Revision']})]});
+update(ab,'controller',{revision:'B'});update(ab,'fastener',{quantity:14,records:[record('DEMO-NC-1061','NC','Synthetic disposition adds two mounting bolts for this unit.','explains',{changes:['Quantity'],serialNumber:'SN120'})]});
 update(ab,'harness',{parentId:'structure',records:[record('DEMO-WO-120','Work order','Harness installed in the structure work package.','related')]});
 update(ab,'sensor-temp',{refDes:['TT-201','TT-203']});
 ab.nodes=ab.nodes.filter(n=>n.id!=='filter');
-ab.nodes.push(node('support','feed','Feed line support','DEMO-2500',1,[],{records:[record('DEMO-NC-1054','NC','Synthetic disposition adds feed line support to this serialized unit.')]}));
+ab.nodes.push(node('support','feed','Feed line support','DEMO-2500',1,[],{records:[record('DEMO-NC-1054','NC','Synthetic disposition adds feed line support to this serialized unit.','explains',{changes:['Added'],serialNumber:'SN120'})]}));
 snapshots.push(ab);
 const ab2=structuredClone(ab);ab2.id='abom-sn121';ab2.serialNumber='SN121';
 update(ab2,'valve-ox',{partNumber:'DEMO-2100',revision:'A',name:'Isolation valve · oxidizer',records:[]});

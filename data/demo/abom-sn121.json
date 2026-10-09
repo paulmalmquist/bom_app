@@ -83,7 +83,10 @@
           "summary": "Synthetic engineering change updates feed transducers to revision B.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Revision"
+          ]
         }
       ]
     },

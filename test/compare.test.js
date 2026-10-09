@@ -14,7 +14,7 @@ test('identical snapshots yield no changes and fingerprints are key-order indepe
 });
 test('demo fulfills ticket scenarios, exact paths and explicit record relationships',async()=>{
   const p=createProvider({BOM_MODE:'demo'});const r=compareSnapshots(await p.get('ebom-rA'),await p.get('abom-sn120'));
-  assert.deepEqual(r.summary,{total:19,changed:8,unchanged:11,added:1,removed:1,explained:4,unresolved:0,referenceChanges:6});
+  assert.deepEqual(r.summary,{total:19,changed:8,unchanged:11,added:1,removed:1,explained:4,partiallyExplained:0,linkedUnscoped:0,unresolved:0,referenceChanges:6});
   const valve=r.rows.find(r=>r.left?.id==='valve-ox');assert.deepEqual(valve.changes,['Replaced','Revision','Description']);assert.match(valve.pathA,/Propellant feed/);assert.match(valve.pathB,/alternate/);assert.equal(valve.evidence[0].id,'DEMO-NC-1042');
   const harness=r.rows.find(r=>r.left?.id==='harness');assert.deepEqual(harness.changes,['Moved']);assert.equal(harness.explained,false);assert.equal(harness.evidence[0].relationship,'related');
   assert.equal(r.referenceDesignators.find(r=>r.ref==='V-OX-01').right[0].partNumber,'DEMO-2110');assert.equal(r.referenceDesignators.find(r=>r.ref==='TT-203').status,'Added');

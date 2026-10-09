@@ -54,7 +54,10 @@
           "summary": "Valve revision update in the proposed engineering baseline.",
           "relationship": "explains",
           "status": "Closed",
-          "source": "Synthetic quality system"
+          "source": "Synthetic quality system",
+          "changes": [
+            "Revision"
+          ]
         }
       ]
     },

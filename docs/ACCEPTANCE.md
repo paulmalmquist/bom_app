@@ -20,7 +20,7 @@
 - 5,000 repeated unmatched parts on each side to exercise ambiguity handling.
 - JavaScript syntax and complete static-asset availability.
 
-Browser QA was unavailable in this environment. Docker was provided but not built here. No live source, BigQuery or workbook access was available for integration validation.
+A headless-Chromium smoke run (`scripts/browser-smoke.mjs`) was added in the red-team review; human browser QA on target browsers is still required. Docker was provided but not built here. No live source, BigQuery or workbook access was available for integration validation.
 
 ## Browser smoke steps for the work environment
 
